@@ -1,262 +1,79 @@
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import os
-import pyttsx3
-import random
-from reportlab.pdfgen import canvas
-from datetime import datetime
+**VitaEmissions: Vehicle Emission Analyzer**
 
-# Set page config
-st.set_page_config(page_title="VitaEmissions: Vehicle Emission Analyzer", layout="wide")
+**VitaEmissions** is a real-time vehicle emission analysis system designed to promote environmental compliance and reduce pollution. This smart dashboard classifies vehicle emissions, generates fine reports, issues voice alerts, and maps pollution hotspots — all using Python.
 
-def speak(text):
-    try:
-        engine = pyttsx3.init()
-        engine.say(text)
-        engine.runAndWait()
-    except Exception:
-        pass  # Prevent Streamlit crash on Windows
+**Overview**
 
+Many vehicles contribute significantly to air pollution due to poor maintenance and lack of real-time emission tracking. VitaEmissions addresses this issue by:
 
+- Analyzing CO, NOx, and PM2.5 levels
+- Classifying vehicles based on their pollution status
+- Generating PDF fine reports for high-emission vehicles
+- Mapping emission hotspots with geospatial visualization
+- Issuing real-time voice alerts
 
-# Emission safety limits
-safe_limits = {
-    "CO": 1.0,
-    "NOx": 0.08,
-    "PM2.5": 35
-}
+**Objectives**
 
+- ✅ Detect high-emission vehicles in real time
+- ✅ Provide digital emission classification
+- ✅ Support smart city and eco-policy enforcement
+- ✅ Encourage regular self-checks via digital tools
 
-def generate_fine_pdf(vehicle_type, co, nox, pm25, status, lat, lon):
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"fine_report_{now}.pdf"
-    c = canvas.Canvas(filename)
+**Tech Stack & Tools**
 
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, 800, " Emission Violation Report")
+1. Python – Core logic and backend programming
+2. Pandas – Data manipulation and dataset creation
+3. Streamlit – Web-based dashboard and user interface
+4. Plotly – Interactive visualizations and charts
+5. Seaborn – Statistical data visualization
+6. Folium – Geo-mapping of emission hotspots
+7. pyttsx3 – Text-to-speech voice alerts
+8. ReportLab – PDF fine report generation
 
-    c.setFont("Helvetica", 12)
-    c.drawString(50, 770, f"Date & Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    c.drawString(50, 750, f"Vehicle Type: {vehicle_type}")
-    c.drawString(50, 730, f"CO: {co} ppm")
-    c.drawString(50, 710, f"NOx: {nox} ppm")
-    c.drawString(50, 690, f"PM2.5: {pm25} µg/m³")
-    c.drawString(50, 670, f"Status: {status}")
-    c.drawString(50, 650, f"Location: Lat {lat}, Lon {lon}")
+**Features**
 
-    c.drawString(50, 610, "Action: Please contact the transport authority within 7 days.")
-    c.drawString(50, 590, "Fine may be applicable based on the severity of emissions.")
+✅ Classify Emissions
+- Accepts real-time values of **CO, NOx, PM2.5**
+- Flags emissions as *Safe*, *Moderate*, or *Danger*
+- Triggers voice alerts
+- Logs data with timestamps and simulated locations
 
-    c.save()
-    return filename
+📄 Fine Report Generation
+- Automatically generates a PDF report if pollution is in *Danger* range
+- Includes pollutant levels, time, and simulated location
 
-def classify_emission(co, nox, pm25):
-    # Print input values and limits (for debugging)
-    st.write(f"Entered values - CO: {co}, NOx: {nox}, PM2.5: {pm25}")
-    st.write(f"Safe Limits - CO: {safe_limits['CO']}, NOx: {safe_limits['NOx']}, PM2.5: {safe_limits['PM2.5']}")
+📊 Dataset Visualization
+- Shows logged vehicle records
+- Displays pollutant averages by vehicle type
+- Shows emission status distribution via pie chart
 
-    # Explicit comparisons
-    co_exceeds = float(co) > float(safe_limits["CO"])
-    nox_exceeds = float(nox) > float(safe_limits["NOx"])
-    pm25_exceeds = float(pm25) > float(safe_limits["PM2.5"])
-
-    st.write(f"Exceeds -> CO: {co_exceeds}, NOx: {nox_exceeds}, PM2.5: {pm25_exceeds}")  # Debug line
-
-    exceed_count = sum([co_exceeds, nox_exceeds, pm25_exceeds])
-    st.write(f"Exceed Count: {exceed_count}")  # Debug line
-
-    if exceed_count == 0:
-        return "Safe"
-    elif exceed_count == 1:
-        return "Warning"
-    else:
-        return "Danger"
+🗺️ Geo-Emission Map
+- Plots vehicle emissions on an interactive map
+- Color-coded markers based on emission status
+- Popups display full emission details
 
 
-    
+**Results**
+
+- Classified over 100 sample emission records across 4 vehicle types
+- Generated real-time fine reports
+- Visualized emission hotspots and patterns using charts and maps
 
 
-# Load or create dataset
-file_path = "C:\\Users\\feroz\\OneDrive\\文档\\VitaEmissions\\emissions_data.csv"
-if os.path.exists(file_path):
-    df = pd.read_csv(file_path)
-else:
-    df = pd.DataFrame(columns=["Vehicle Type", "CO", "NOx", "PM2.5", "Status", "Latitude", "Longitude"])
+**Sustainability & Impact**
 
+- Enables real-time pollution monitoring for smart cities
+- Helps authorities identify and penalize non-compliant vehicles
+- Encourages citizens to stay environmentally responsible
+- A step toward **green mobility** and **cleaner cities**
 
-# Sidebar Navigation
-st.sidebar.title(" Navigation")
-page = st.sidebar.radio("Go to", ["Home", "Classify Emissions", "Dataset", "Geo Map"])
+**Future Scope**
 
+- Integrate **number plate detection** using OpenCV
+- Connect with **real sensor APIs or IoT devices**
+- Deploy for **traffic departments** and **eco-governance platforms**
 
-# ---------------- HOME ----------------
-if page == "Home":
-    st.title(" Vehicle Emission Analyzer")
-    st.subheader("Check if your vehicle’s emissions are safe.")
-    st.markdown("""
-        This project helps analyze pollution levels from vehicles and classifies them 
-        based on Bharat Stage VI norms using CO, NOx, and PM2.5 values.
-    """)
-    st.image("C:\\Users\\feroz\\OneDrive\\文档\\VitaEmissions\\vehicle.jpg", caption="Smart Emission Monitoring", use_column_width=True)
-
-# ---------------- CLASSIFICATION ----------------
-elif page == "Classify Emissions":
-    st.header(" Classify Vehicle Emissions")
-
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        vehicle_type = st.selectbox("Vehicle Type", ["Car", "Bike", "Bus", "Truck"])
-        co = st.number_input("CO (ppm)", min_value=0.0, step=0.01)
-        nox = st.number_input("NOx (ppm)", min_value=0.0, step=0.01)
-        pm25 = st.number_input("PM2.5 (µg/m³)", min_value=0.0, step=1.0)
-
-        if st.button(" Analyze"):
-            status = classify_emission(co, nox, pm25)
-            st.write(f"CO: {co}, NOx: {nox}, PM2.5: {pm25}")
-            st.write(f"Calculated Status: {status}")
-            
-            latitude = random.uniform(17.6, 17.8)
-            longitude = random.uniform(83.1, 83.3)
-
-
-            if status == "Safe":
-                st.success(" Emission Status: Safe")
-                speak("The emission status is safe.")
-            elif status == "Warning":
-                st.warning("⚠ Emission Status: Warning")
-                speak("Warning. Emission levels slightly exceed safe limits.")
-            else:
-                st.error(" Emission Status: Danger")
-                speak("Danger. Emission levels are too high.")
-                # Generate PDF fine report
-                pdf_filename = generate_fine_pdf(vehicle_type, co, nox, pm25, status, latitude, longitude)
-                st.success(f" Fine report generated: {pdf_filename}")
-                st.download_button("⬇ Download Fine Report", data=open(pdf_filename, "rb"), file_name=pdf_filename)
-
-
-            new_row = {
-                "Vehicle Type": vehicle_type,
-                "CO": co,
-                "NOx": nox,
-                "PM2.5": pm25,
-                "Status": status,
-                "Latitude": latitude,
-                "Longitude": longitude
-            }
-            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-            df.to_csv(file_path, index=False)
-
-
-
-    with col2:
-        st.subheader(" Norm Reference")
-        st.markdown("### CO (ppm)")
-        st.markdown("- ✅ **Safe:** ≤ 1.0\n- ⚠️ **Warning:** 1.01 – 2.0\n- 🚨 **Danger:** > 2.0")
-        st.markdown("### NOx (ppm)")
-        st.markdown("- ✅ **Safe:** ≤ 0.08\n- ⚠️ **Warning:** 0.081 – 0.15\n- 🚨 **Danger:** > 0.15")
-        st.markdown("### PM2.5 (µg/m³)")
-        st.markdown("- ✅ **Safe:** ≤ 35\n- ⚠️ **Warning:** 36 – 75\n- 🚨 **Danger:** > 75")
-
-
-# ---------------- DATASET + VISUALIZATIONS ----------------
-elif page == "Dataset":
-    st.header("📄 Dataset Overview")
-
-    if df.empty:
-        st.info("No data available yet. Go to 'Classify Emissions' and enter values.")
-    else:
-        # -----------------------------------
-        # Row 1 – Small Pie Chart (left)
-        # -----------------------------------
-        row1 = st.columns([1, 3])  # pie chart in left column only
-
-        with row1[0]:
-            st.subheader("Emission Status")
-            status_counts = df["Status"].value_counts()
-            fig1, ax1 = plt.subplots(figsize=(3, 3))
-            ax1.pie(status_counts, labels=status_counts.index, autopct='%1.1f%%',
-                    startangle=140, colors=['#90ee90', '#f9dc5c', '#ff6b6b'])
-            ax1.axis('equal')
-            st.pyplot(fig1)
-
-        # -----------------------------------
-        #  Row 2 – 3 Bar Charts Side by Side
-        # -----------------------------------
-        st.subheader("Average Emissions by Vehicle Type")
-
-        avg_pollutants = df.groupby("Vehicle Type")[["CO", "NOx", "PM2.5"]].mean().reset_index()
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.markdown("**CO (ppm)**")
-            fig_co, ax_co = plt.subplots(figsize=(3, 2.5))
-            sns.barplot(data=avg_pollutants, x="Vehicle Type", y="CO", ax=ax_co, color="skyblue")
-            ax_co.set_ylabel("")
-            ax_co.set_xlabel("")
-            ax_co.set_xticklabels(avg_pollutants["Vehicle Type"], rotation=45)
-            st.pyplot(fig_co)
-
-        with col2:
-            st.markdown("**NOx (ppm)**")
-            fig_nox, ax_nox = plt.subplots(figsize=(3, 2.5))
-            sns.barplot(data=avg_pollutants, x="Vehicle Type", y="NOx", ax=ax_nox, color="orange")
-            ax_nox.set_ylabel("")
-            ax_nox.set_xlabel("")
-            ax_nox.set_xticklabels(avg_pollutants["Vehicle Type"], rotation=45)
-            st.pyplot(fig_nox)
-
-        with col3:
-            st.markdown("**PM2.5 (µg/m³)**")
-            fig_pm, ax_pm = plt.subplots(figsize=(3, 2.5))
-            sns.barplot(data=avg_pollutants, x="Vehicle Type", y="PM2.5", ax=ax_pm, color="green")
-            ax_pm.set_ylabel("")
-            ax_pm.set_xlabel("")
-            ax_pm.set_xticklabels(avg_pollutants["Vehicle Type"], rotation=45)
-            st.pyplot(fig_pm)
-
-        # -----------------------------------
-        #  Row 3 – Full Dataset
-        # -----------------------------------
-        st.subheader("📋 Full Dataset")
-        st.dataframe(df, use_container_width=True)
-    
-elif page == "Geo Map":
-    st.header("🗺️ Pollution Status Map")
-
-    if "Latitude" not in df.columns or "Longitude" not in df.columns:
-        st.error("No geolocation data available. Please classify emissions first.")
-    else:
-        import folium
-        from streamlit_folium import st_folium
-
-        m = folium.Map(location=[17.7, 83.2], zoom_start=12)
-
-        for _, row in df.iterrows():
-            color = (
-                "green" if row["Status"] == "Safe"
-                else "orange" if row["Status"] == "Warning"
-                else "red"
-            )
-            popup_text = f"""
-            <b>Vehicle Type:</b> {row['Vehicle Type']}<br>
-            <b>Status:</b> {row['Status']}<br>
-            <b>CO:</b> {row['CO']} ppm<br>
-            <b>NOx:</b> {row['NOx']} ppm<br>
-            <b>PM2.5:</b> {row['PM2.5']} µg/m³<br>
-            <b>Lat:</b> {row['Latitude']}<br>
-            <b>Lon:</b> {row['Longitude']}
-            """
-
-            folium.Marker(
-                location=[row["Latitude"], row["Longitude"]],
-                popup=folium.Popup(popup_text, max_width=250),
-                icon=folium.Icon(color=color)
-            ).add_to(m)
-
-
-        st_folium(m, width=700, height=500)
+**Contribution**
+Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change or improve.
 
 
